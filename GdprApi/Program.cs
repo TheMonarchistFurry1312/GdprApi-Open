@@ -1,5 +1,5 @@
 /*
- * Copyright (c) [Your Company Name] 2025
+ * Copyright (c) HeyBaldur 2025
  *
  * License Agreement for [Your GDPR API Name]
  *
@@ -7,20 +7,20 @@
  * This software, including the [Your GDPR API Name] and all associated documentation 
  * ("Software"), is licensed solely for development and testing purposes under the terms 
  * of this License Agreement ("Agreement"). This Software is provided to you ("Licensee") 
- * by [Your Company Name] ("Licensor") under the following conditions:
+ * by HeyBaldur ("Licensor") under the following conditions:
  * 
  * - The Software may only be used in non-production environments for the purpose of 
  *   developing and testing applications that interact with the Software.
  * - Use of the Software in production environments or for any commercial purpose 
- *   requires a valid commercial license issued by [Your Company Name].
+ *   requires a valid commercial license issued by HeyBaldur.
  * - The Software is provided "as is" without any warranties, express or implied.
  *
  * 2. Restrictions on Use
  * Licensee shall not:
  * - Use the Software in a production environment without obtaining a valid commercial 
- *   license from [Your Company Name].
+ *   license from HeyBaldur.
  * - Modify, reverse-engineer, decompile, or create derivative works of the Software 
- *   without prior written consent from [Your Company Name].
+ *   without prior written consent from HeyBaldur.
  * - Redistribute, sublicense, rent, lease, or otherwise transfer the Software to any 
  *   third party.
  * - Use the Software to process personal data in violation of the General Data Protection 
@@ -32,34 +32,34 @@
  *   including but not limited to lawful processing, data minimization, and purpose limitation.
  * - Implement appropriate technical and organizational measures to ensure the security 
  *   of personal data processed via the Software, as required by Article 32 of GDPR.
- * - Notify [Your Company Name] immediately in the event of a personal data breach 
+ * - Notify HeyBaldur immediately in the event of a personal data breach 
  *   involving the Software, as required by Article 33 of GDPR.
  * - If acting as a data controller, ensure a lawful basis for processing personal data 
  *   and provide necessary transparency to data subjects under Articles 13 and 14 of GDPR.
  * - If acting as a data processor, comply with all obligations under Article 28 of GDPR, 
- *   including entering into a data processing agreement with [Your Company Name] if required.
+ *   including entering into a data processing agreement with HeyBaldur if required.
  *
  * 4. Intellectual Property
  * The Software, including all code, documentation, and associated intellectual property, 
- * is owned by [Your Company Name]. This Agreement does not transfer any ownership rights 
- * to Licensee. All rights not expressly granted herein are reserved by [Your Company Name].
+ * is owned by HeyBaldur. This Agreement does not transfer any ownership rights 
+ * to Licensee. All rights not expressly granted herein are reserved by HeyBaldur.
  *
  * 5. Disclaimer of Warranties
  * The Software is provided "AS IS" without warranties of any kind, whether express, implied, 
  * statutory, or otherwise, including but not limited to warranties of merchantability, 
- * fitness for a particular purpose, or non-infringement. [Your Company Name] does not 
+ * fitness for a particular purpose, or non-infringement. HeyBaldur does not 
  * warrant that the Software will meet Licensee’s requirements or operate without interruption 
  * or errors.
  *
  * 6. Limitation of Liability
- * To the maximum extent permitted by law, [Your Company Name] shall not be liable for any 
+ * To the maximum extent permitted by law, HeyBaldur shall not be liable for any 
  * direct, indirect, incidental, consequential, or punitive damages arising out of or related 
  * to the use of the Software, including but not limited to data loss, breaches of GDPR, or 
  * other regulatory non-compliance. Licensee assumes full responsibility for ensuring GDPR 
  * compliance when using the Software.
  *
  * 7. Termination
- * This Agreement is effective until terminated. [Your Company Name] may terminate this 
+ * This Agreement is effective until terminated. HeyBaldur may terminate this 
  * Agreement immediately if Licensee breaches any of its terms. Upon termination, Licensee 
  * must cease all use of the Software and destroy all copies in its possession or control.
  *
