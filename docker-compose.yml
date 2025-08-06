@@ -1,0 +1,66 @@
+# docker-compose.yml
+# This file defines the services (containers) for our application.
+# It now includes a MongoDB container for a fully self-contained development environment.
+
+services:
+  # Service for the ASP.NET Core API
+  gdpr-api:
+    # Use the Dockerfile in the current directory to build this service
+    build:
+      context: .
+      # Specifies the path to the Dockerfile
+      dockerfile: ./GdprApi/Dockerfile
+    # Map port 8080 on the host machine to port 80 in the container
+    ports:
+      - "8080:80"
+    # Restart the container automatically if it crashes
+    restart: always
+    # Environment variables for the API
+    environment:
+      - MongoDbSettings__ConnectionString=${MONGO_DB_CNX}
+      - MongoDbSettings__DatabaseName=${MONGO_DB_NAME}
+      - AppSettings__Token=${APP_SETTINGS_TOKEN}
+      - AppSettings__AccessTokenExpirationMinutes=${ACCESS_TOKEN_EXPIRATION_MINUTES}
+      - AppSettings__RefreshTokenExpirationMinutes=${REFRESH_TOKEN_EXPIRATION_MINUTES}
+      - LicenseKey=${LICENSE_KEY}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=http://+:80
+    # The API container depends on the MongoDB container being healthy
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    # Connects this service to the network for MongoDB
+    networks:
+      - gdpr-network
+
+  # Service for the MongoDB database
+  mongodb:
+    # Use a specific, stable MongoDB image that is known to work with the health check.
+    image: mongo:4.4
+    container_name: gdpr-mongodb
+    # Map port 27017 on the host to the same port in the container
+    ports:
+      - "27017:27017"
+    # Persist the data in a Docker volume, so it is not lost when the container is stopped
+    volumes:
+      - mongodb_data:/data/db
+    # Restart the container automatically
+    restart: always
+    networks:
+      - gdpr-network
+    # This health check command uses a robust shell script to ping the server to ensure it's ready.
+    healthcheck:
+      test: ["CMD", "sh", "-c", "mongo --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 1)'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Define the volume for persistent data storage
+volumes:
+  mongodb_data:
+    # This ensures the volume is created and managed by Docker Compose
+    driver: local
+# Define the custom network
+networks:
+  gdpr-network:
+    driver: bridge
