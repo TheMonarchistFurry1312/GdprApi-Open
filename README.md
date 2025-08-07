@@ -1,4 +1,4 @@
-<img width="1095" height="233" alt="GDPR_Api" src="https://github.com/user-attachments/assets/7aa6b89c-d43b-476f-b3f2-75e4aaf7f2b0" />
+![GdprApi is a .NET 8 Web API designed for managing GDPR-compliant operations in a multi-tenant system](https://github.com/user-attachments/assets/0b4e40a2-a788-4e28-9b2b-f9b63d6fdf6c)
 
 ## Overview
 GdprApi is a .NET 8 Web API designed for managing GDPR-compliant operations in a multi-tenant system. It provides endpoints for tenant creation, audit logging, and other functionalities, ensuring compliance with GDPR requirements such as accountability (Article 5(2)), data minimization (Article 5(1)(c)), and security of processing (Article 32). The API is built with ASP.NET Core, MongoDB for data storage, and Swagger for API documentation, making it suitable for developers building applications that require robust tenant management and auditability.
