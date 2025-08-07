@@ -121,6 +121,7 @@ To run the API, you need a local MongoDB instance. Using Docker is the recommend
     -   The application will build and launch a browser window, taking you to the Swagger UI at `https://localhost:<port>/swagger`.
 
 5.  **Test Endpoints**: From the Swagger UI, you can interact with the API endpoints to create tenants, view audit logs, and more. For example, use the `Tenant` endpoints to test the multi-tenant functionality.
+6.  **API documentation** is available in https://github.com/HeyBaldur/GdprApi-Open/blob/master/Docs.md
 
 ## 🛡️ License
 
