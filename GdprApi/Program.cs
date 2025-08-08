@@ -1,10 +1,10 @@
 /*
  * Copyright (c) HeyBaldur 2025
  *
- * License Agreement for [Your GDPR API Name]
+ * License Agreement for HeyBaldur/GoConnect.dev
  *
  * 1. Grant of License
- * This software, including the [Your GDPR API Name] and all associated documentation 
+ * This software, including the HeyBaldur/GoConnect.dev and all associated documentation 
  * ("Software"), is licensed solely for development and testing purposes under the terms 
  * of this License Agreement ("Agreement"). This Software is provided to you ("Licensee") 
  * by HeyBaldur ("Licensor") under the following conditions:
@@ -77,10 +77,6 @@
  * 10. Contact Information
  * For inquiries regarding commercial licensing, GDPR compliance, or other matters related 
  * to this Agreement, please contact:
- * - Email: [your-contact-email]
- * - Website: [your-contact-url]
- * - Data Protection Officer: [dpo-email, if applicable]
- *
  * By using the Software, Licensee acknowledges that they have read, understood, and agree 
  * to be bound by the terms and conditions of this Agreement.
  */
