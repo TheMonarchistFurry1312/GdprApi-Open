@@ -6,7 +6,7 @@ namespace Repositories.Interfaces
     {
         Task<Tenant> GetTenantByIdAsync(string tenantId);
         Task InsertTenantAudienceAsync(TenantAudience tenantAudience);
-        Task<List<TenantAudience>> GetTenantAudiencesByTenantIdAsync(string tenantId);
+        Task<List<TenantAudience>> GetTenantAudiencesByTenantIdAsync(string tenantId, int skip, int take);
         void CreatePseudonymMappingIndex();
     }
 }

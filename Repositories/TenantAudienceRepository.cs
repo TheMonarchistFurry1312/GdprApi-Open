@@ -32,10 +32,14 @@ namespace Repositories
             await _tenantAudienceCollection.InsertOneAsync(tenantAudience);
         }
 
-        public async Task<List<TenantAudience>> GetTenantAudiencesByTenantIdAsync(string tenantId)
+        public async Task<List<TenantAudience>> GetTenantAudiencesByTenantIdAsync(string tenantId, int skip, int take)
         {
             var filter = Builders<TenantAudience>.Filter.Eq(t => t.TenantId, tenantId);
-            return await _tenantAudienceCollection.Find(filter).ToListAsync();
+            return await _tenantAudienceCollection
+                .Find(filter)
+                .Skip(skip)
+                .Limit(take)
+                .ToListAsync();
         }
 
         public void CreatePseudonymMappingIndex()
