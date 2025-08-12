@@ -84,9 +84,12 @@ namespace GdprApi.Controllers
         }
 
         /// <summary>
-        /// Retrieves all tenant audience records for a given TenantId, supporting GDPR Article 15 (right of access).
+        /// Retrieves all tenant audience records for a given TenantId, supporting GDPR Article 15 (right of access). Example:
+        /// curl -X GET "api/audience/1234567890abcdef/audience?pageNumber=2&pageSize=10"
         /// </summary>
         /// <param name="tenantId">The ID of the tenant whose audience data is to be retrieved.</param>
+        /// <param name="pageNumber">Page number.</param>
+        /// <param name="pageSize">Page size.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="tenantId"/> is null or empty.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the tenant is not found or consent is missing.</exception>
         /// <exception cref="UnauthorizedAccessException">Thrown when client ID is invalid.</exception>
@@ -97,7 +100,10 @@ namespace GdprApi.Controllers
         /// </remarks>
         [Authorize(Policy = "TenantAccessWithClientId")]
         [HttpGet("{tenantId}/audience", Name = "GetTenantAudiencesByTenantId")]
-        public async Task<IActionResult> GetTenantAudiencesByTenantIdAsync([FromRoute] string tenantId)
+        public async Task<IActionResult> GetTenantAudiencesByTenantIdAsync(
+            [FromRoute] string tenantId,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 20)
         {
             // Validate tenantId matches the JWT claim
             var userTenantId = User.FindFirst("tenantId")?.Value;
@@ -115,7 +121,11 @@ namespace GdprApi.Controllers
 
             try
             {
-                var response = await _tenantService.GetTenantAudiencesByTenantIdAsync(tenantId, clientIdFromHeader);
+                var response = await _tenantService.GetTenantAudiencesByTenantIdAsync(
+                    tenantId,
+                    clientIdFromHeader,
+                    pageNumber,
+                    pageSize);
                 return Ok(response);
             }
             catch (ArgumentNullException ex)

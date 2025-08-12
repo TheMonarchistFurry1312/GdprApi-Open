@@ -34,6 +34,10 @@ namespace GdprServices.Audience
         /// <exception cref="ArgumentNullException">Thrown when tenantId or clientIdFromHeader is null or empty.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the tenant is not found, consent is missing, or decryption/deserialization fails.</exception>
         /// <exception cref="UnauthorizedAccessException">Thrown when the client ID is invalid.</exception>
-        Task<List<TenantAudience>> GetTenantAudiencesByTenantIdAsync(string tenantId, string clientIdFromHeader);
+        Task<List<TenantAudience>> GetTenantAudiencesByTenantIdAsync(
+            string tenantId,
+            string clientIdFromHeader,
+            int pageNumber,
+            int pageSize);
     }
 }

@@ -280,18 +280,23 @@ namespace UnitTests.Services
             // Arrange
             string tenantId = "tenant123";
             string clientId = "client123";
+            int skip = 1;
+            int take = 10;
             var tenant = CreateTestTenant(tenantId, clientId);
             var audiences = CreateTestAudiences(tenantId);
 
             _audienceRepositoryMock.Setup(r => r.GetTenantByIdAsync(It.IsAny<string>()))
                 .ReturnsAsync(tenant);
-            _audienceRepositoryMock.Setup(r => r.GetTenantAudiencesByTenantIdAsync(It.IsAny<string>()))
+            _audienceRepositoryMock.Setup(r => r.GetTenantAudiencesByTenantIdAsync(
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<int>()))
                 .ReturnsAsync(audiences);
             _auditLogsMock.Setup(a => a.CreateAsync(It.IsAny<AuditLog>()))
                 .ReturnsAsync("audit123");
 
             // Act
-            var result = await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId);
+            var result = await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId, skip, take);
 
             // Assert
             Assert.IsNotNull(result);
@@ -312,13 +317,15 @@ namespace UnitTests.Services
             // Arrange
             string tenantId = null;
             string clientId = "client123";
+            int pageNumber = 1;
+            int pageSize = 10;
 
             _auditLogsMock.Setup(a => a.CreateAsync(It.IsAny<AuditLog>()))
                 .ReturnsAsync("audit123");
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId));
+                await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId, pageNumber, pageSize));
             Assert.AreEqual("Tenant ID cannot be null or empty. (Parameter 'tenantId')", ex.Message);
             _auditLogsMock.Verify(a => a.CreateAsync(It.Is<AuditLog>(log =>
                 !log.IsSuccess &&
@@ -331,13 +338,15 @@ namespace UnitTests.Services
             // Arrange
             string tenantId = "tenant123";
             string clientId = null;
+            int pageNumber = 1;
+            int pageSize = 10;
 
             _auditLogsMock.Setup(a => a.CreateAsync(It.IsAny<AuditLog>()))
                 .ReturnsAsync("audit123");
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId));
+                await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId, pageNumber, pageSize));
             Assert.AreEqual("ClientId cannot be null or empty. (Parameter 'clientIdFromHeader')", ex.Message);
             _auditLogsMock.Verify(a => a.CreateAsync(It.Is<AuditLog>(log =>
                 !log.IsSuccess &&
@@ -350,6 +359,8 @@ namespace UnitTests.Services
             // Arrange
             string tenantId = "tenant123";
             string clientId = "client123";
+            int pageNumber = 1;
+            int pageSize = 10;
 
             _audienceRepositoryMock.Setup(r => r.GetTenantByIdAsync(It.IsAny<string>()))
                 .ReturnsAsync((Tenant)null);
@@ -358,7 +369,7 @@ namespace UnitTests.Services
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId));
+                await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId, pageNumber, pageSize));
             Assert.AreEqual("Tenant not found.", ex.Message);
             _auditLogsMock.Verify(a => a.CreateAsync(It.Is<AuditLog>(log =>
                 !log.IsSuccess &&
@@ -372,6 +383,8 @@ namespace UnitTests.Services
             string tenantId = "tenant123";
             string clientId = "wrongClient";
             var tenant = CreateTestTenant(tenantId, "client123");
+            int pageNumber = 1;
+            int pageSize = 10;
 
             _audienceRepositoryMock.Setup(r => r.GetTenantByIdAsync(It.IsAny<string>()))
                 .ReturnsAsync(tenant);
@@ -380,7 +393,7 @@ namespace UnitTests.Services
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
-                await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId));
+                await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId, pageNumber, pageSize));
             Assert.AreEqual("Invalid ClientId.", ex.Message);
             _auditLogsMock.Verify(a => a.CreateAsync(It.Is<AuditLog>(log =>
                 !log.IsSuccess &&
@@ -395,6 +408,8 @@ namespace UnitTests.Services
             string clientId = "client123";
             var tenant = CreateTestTenant(tenantId, clientId);
             tenant.ConsentAccepted = false;
+            int pageNumber = 1;
+            int pageSize = 10;
 
             _audienceRepositoryMock.Setup(r => r.GetTenantByIdAsync(It.IsAny<string>()))
                 .ReturnsAsync(tenant);
@@ -403,7 +418,7 @@ namespace UnitTests.Services
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId));
+                await _tenantAudienceService.GetTenantAudiencesByTenantIdAsync(tenantId, clientId, pageNumber, pageSize));
             Assert.AreEqual("Tenant consent is required for data access.", ex.Message);
             _auditLogsMock.Verify(a => a.CreateAsync(It.Is<AuditLog>(log =>
                 !log.IsSuccess &&
