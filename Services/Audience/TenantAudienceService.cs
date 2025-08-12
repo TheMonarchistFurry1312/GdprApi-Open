@@ -244,7 +244,11 @@ namespace GdprServices.Audience
             return "Tenant audience data saved successfully.";
         }
 
-        public async Task<List<TenantAudience>> GetTenantAudiencesByTenantIdAsync(string tenantId, string clientIdFromHeader)
+        public async Task<List<TenantAudience>> GetTenantAudiencesByTenantIdAsync(
+            string tenantId,
+            string clientIdFromHeader,
+            int pageNumber,
+            int pageSize)
         {
             if (string.IsNullOrEmpty(tenantId))
             {
@@ -335,7 +339,9 @@ namespace GdprServices.Audience
             }
 
             // Retrieve all TenantAudience records for the TenantId
-            var tenantAudiences = await _repository.GetTenantAudiencesByTenantIdAsync(tenantId);
+            int skip = (pageNumber - 1) * pageSize;
+            int take = pageSize;
+            var tenantAudiences = await _repository.GetTenantAudiencesByTenantIdAsync(tenantId, skip, take);
 
             // Convert BsonDocument values to JSON-compatible types with decryption
             var convertedAudiences = tenantAudiences.Select(audience =>
