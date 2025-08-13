@@ -86,5 +86,14 @@ namespace Repositories
         {
             await _refreshTokensCollection.InsertOneAsync(refreshToken);
         }
+
+        public async Task<PseudonymMapping> GetPseudonymMappingByTenantIdAndFieldTypeAsync(string tenantId)
+        {
+            var filter = Builders<PseudonymMapping>.Filter.And(
+                Builders<PseudonymMapping>.Filter.Eq(pm => pm.TenantId, tenantId),
+                Builders<PseudonymMapping>.Filter.Eq(pm => pm.FieldType, "Email")
+            );
+            return await _pseudonymMappingsCollection.Find(filter).FirstOrDefaultAsync();
+        }
     }
 }

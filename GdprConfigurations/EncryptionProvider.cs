@@ -5,56 +5,69 @@ namespace GdprConfigurations
 {
     public static class EncryptionProvider
     {
-        /// <summary>
-        /// Decrypts a byte array to retrieve the original string.
-        /// </summary>
-        /// <param name="encryptedData">The encrypted data including IV.</param>
-        /// <returns>The decrypted original string.</returns>
-        public static string DecryptString(byte[] encryptedData, byte[] encryptionKey)
-        {
-            using var aes = Aes.Create();
-            aes.Key = encryptionKey;
-            var iv = encryptedData.Take(16).ToArray(); // Extract IV (16 bytes for AES)
-            var data = encryptedData.Skip(16).ToArray();
-            var decryptor = aes.CreateDecryptor(aes.Key, iv);
-            using var ms = new MemoryStream(data);
-            using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
-            using var sr = new StreamReader(cs);
-            return sr.ReadToEnd();
-        }
-
-        /// <summary>
-        /// Encrypts a string using AES for secure storage of original values.
-        /// </summary>
-        /// <param name="text">The text to encrypt.</param>
-        /// <returns>The encrypted data as a byte array.</returns>
-        public static byte[] EncryptString(string text, byte[] encryptionKey)
-        {
-            using var aes = Aes.Create();
-            aes.Key = encryptionKey;
-            aes.GenerateIV();
-            var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-            using var ms = new MemoryStream();
-            ms.Write(aes.IV, 0, aes.IV.Length); // Prepend IV for decryption
-            using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
-            using (var sw = new StreamWriter(cs))
-            {
-                sw.Write(text);
-            }
-            return ms.ToArray();
-        }
-
-        /// <summary>
-        /// Generates a SHA-256 hash of the input string for pseudonymization.
-        /// </summary>
-        /// <param name="input">The string to hash (e.g., email, full name).</param>
-        /// <returns>The base64-encoded hash of the input string.</returns>
         public static string HashString(string input)
         {
+            if (string.IsNullOrEmpty(input))
+                throw new ArgumentNullException(nameof(input), "Input cannot be null or empty.");
+
             using var sha256 = SHA256.Create();
             var bytes = Encoding.UTF8.GetBytes(input);
             var hash = sha256.ComputeHash(bytes);
             return Convert.ToBase64String(hash);
+        }
+
+        public static byte[] EncryptString(string plaintext, byte[] key)
+        {
+            if (string.IsNullOrEmpty(plaintext))
+                throw new ArgumentNullException(nameof(plaintext), "Plaintext cannot be null or empty.");
+            if (key == null || key.Length != 32)
+                throw new ArgumentException("Key must be 32 bytes for AES-256-GCM.", nameof(key));
+
+            byte[] nonce = new byte[12]; // AES-GCM recommends 12-byte nonce
+            RandomNumberGenerator.Fill(nonce);
+            byte[] plaintextBytes = Encoding.UTF8.GetBytes(plaintext);
+            byte[] ciphertext = new byte[plaintextBytes.Length];
+            byte[] tag = new byte[16]; // AES-GCM produces 16-byte authentication tag
+
+            using (var aesGcm = new AesGcm(key))
+            {
+                aesGcm.Encrypt(nonce, plaintextBytes, ciphertext, tag);
+            }
+
+            // Combine nonce, tag, and ciphertext: [nonce (12 bytes) | tag (16 bytes) | ciphertext]
+            byte[] result = new byte[nonce.Length + tag.Length + ciphertext.Length];
+            Buffer.BlockCopy(nonce, 0, result, 0, nonce.Length);
+            Buffer.BlockCopy(tag, 0, result, nonce.Length, tag.Length);
+            Buffer.BlockCopy(ciphertext, 0, result, nonce.Length + tag.Length, ciphertext.Length);
+
+            return result;
+        }
+
+        public static string DecryptString(byte[] encryptedData, byte[] key)
+        {
+            if (encryptedData == null || encryptedData.Length < 28) // Minimum: 12-byte nonce + 16-byte tag
+                throw new ArgumentNullException(nameof(encryptedData), "Encrypted data is null or too short.");
+            if (key == null || key.Length != 32)
+                throw new ArgumentException("Key must be 32 bytes for AES-256-GCM.", nameof(key));
+
+            // Extract nonce (12 bytes), tag (16 bytes), and ciphertext
+            byte[] nonce = encryptedData.Take(12).ToArray();
+            byte[] tag = encryptedData.Skip(12).Take(16).ToArray();
+            byte[] ciphertext = encryptedData.Skip(12 + 16).ToArray();
+
+            byte[] plaintextBytes = new byte[ciphertext.Length];
+            try
+            {
+                using (var aesGcm = new AesGcm(key))
+                {
+                    aesGcm.Decrypt(nonce, ciphertext, tag, plaintextBytes);
+                }
+                return Encoding.UTF8.GetString(plaintextBytes);
+            }
+            catch (CryptographicException ex)
+            {
+                throw new CryptographicException("Decryption failed. Data may have been tampered with.", ex);
+            }
         }
     }
 }

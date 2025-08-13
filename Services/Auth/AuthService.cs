@@ -21,11 +21,13 @@ namespace GdprServices.Auth
         private readonly IAuditLogs _auditLogs;
         private readonly ILogger<TenantService> _logger;
         private readonly IConfiguration _configuration;
-        private static readonly string Base64Key = "ASNFZ4mrze/+3LqYdlQyEBEiM0RVV2aHiZqrzN3u/wA=";
+        private static readonly string Base64Key = "ASNFZ4mrze/+3LqYdlQyEBEiM0RVV2aHiZqrzN3u/wA="; // Store securely
+        private static readonly string Base64MacKey = "SGVsbG8gV29ybGQgSGVsbG8gV29ybGQgSGVsbG8gV29ybGQ="; // Store securely
         private readonly byte[] EncryptionKey;
         private readonly string _tokenKey;
         private readonly int _accessTokenExpirationMinutes;
         private readonly int _refreshTokenExpirationMinutes;
+        private readonly byte[] MacKey;
 
         public AuthService(
             ITenantRepository repository,
@@ -41,6 +43,7 @@ namespace GdprServices.Auth
             _accessTokenExpirationMinutes = int.Parse(_configuration["AppSettings:AccessTokenExpirationMinutes"] ?? "15");
             _refreshTokenExpirationMinutes = int.Parse(_configuration["AppSettings:RefreshTokenExpirationMinutes"] ?? "30");
             EncryptionKey = InitializeEncryptionKey();
+            MacKey = Convert.FromBase64String(Base64MacKey);
         }
 
         public async Task<string> CreateTenantAsync(RegisterTenantRequest request)
@@ -147,6 +150,9 @@ namespace GdprServices.Auth
                 ClientId = Guid.NewGuid().ToString("N")
             };
 
+            var fullNameEncrypted = EncryptionProvider.EncryptString(request.FullName, EncryptionKey);
+            var emailEncrypted = EncryptionProvider.EncryptString(request.Email, EncryptionKey);
+
             var mappings = new[]
             {
                 new PseudonymMapping
@@ -154,7 +160,7 @@ namespace GdprServices.Auth
                     Id = ObjectId.GenerateNewId().ToString(),
                     TenantId = tenant.Id,
                     HashedValue = tenant.FullName,
-                    EncryptedOriginalValue = EncryptionProvider.EncryptString(request.FullName, EncryptionKey),
+                    EncryptedOriginalValue = fullNameEncrypted,
                     FieldType = "FullName",
                     RetentionExpiryUtc = tenant.RetentionExpiryUtc
                 },
@@ -163,7 +169,7 @@ namespace GdprServices.Auth
                     Id = ObjectId.GenerateNewId().ToString(),
                     TenantId = tenant.Id,
                     HashedValue = tenant.Email,
-                    EncryptedOriginalValue = EncryptionProvider.EncryptString(request.Email, EncryptionKey),
+                    EncryptedOriginalValue = emailEncrypted,
                     FieldType = "Email",
                     RetentionExpiryUtc = tenant.RetentionExpiryUtc
                 }
@@ -220,7 +226,10 @@ namespace GdprServices.Auth
             }
         }
 
-        public async Task<JwtAuthResponse> AuthenticateTenantAsync(string email, string password, string ipAddress)
+        public async Task<JwtAuthResponse> AuthenticateTenantAsync(
+            string email,
+            string password,
+            string ipAddress)
         {
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
             {
@@ -241,6 +250,54 @@ namespace GdprServices.Auth
 
             var hashedEmail = EncryptionProvider.HashString(email);
             var tenant = await _repository.GetByEmailAsync(hashedEmail);
+
+            // Retrieve the pseudonym mapping for the email
+            var emailMapping = await _repository.GetPseudonymMappingByTenantIdAndFieldTypeAsync(tenant.Id);
+            if (emailMapping == null)
+            {
+                throw new InvalidOperationException("Pseudonym mapping for email not found.");
+            }
+
+            try
+            {
+                // Decrypt and verify authenticity using AES-GCM
+                string originalEmail = EncryptionProvider.DecryptString(emailMapping.EncryptedOriginalValue, EncryptionKey);
+                if (originalEmail != email)
+                {
+                    await LogAuditAsync(
+                        tenantId: tenant.Id,
+                        performedBy: email,
+                        actorType: ActorType.Anonymous,
+                        actionType: AuditActionType.Authentication,
+                        targetEntity: TargetEntityType.Tenant,
+                        targetEntityId: tenant.Id,
+                        details: new Dictionary<string, object> { { "Error", "Decrypted email does not match input email." } },
+                        isSuccess: false,
+                        logErrorContext: "tenant authentication"
+                    );
+                    _logger.LogWarning("Decrypted email does not match input email, TenantId: {TenantId}", tenant.Id);
+                    throw new CryptographicException("Decrypted email does not match input email.");
+                }
+            }
+            catch (CryptographicException ex)
+            {
+                await LogAuditAsync(
+                    tenantId: tenant.Id,
+                    performedBy: email,
+                    actorType: ActorType.Anonymous,
+                    actionType: AuditActionType.Authentication,
+                    targetEntity: TargetEntityType.Tenant,
+                    targetEntityId: tenant.Id,
+                    details: new Dictionary<string, object> { { "Error", "AES-GCM decryption failed: Data may have been tampered with." } },
+                    isSuccess: false,
+                    logErrorContext: "tenant authentication"
+                );
+                _logger.LogWarning("AES-GCM decryption failed for email mapping, TenantId: {TenantId}", tenant.Id);
+                throw new CryptographicException("AES-GCM decryption failed. Data may have been tampered with.", ex);
+            }
+
+            // Optionally, decrypt the original email if needed
+            // string originalEmail = EncryptionProvider.DecryptString(emailMapping.EncryptedOriginalValue, EncryptionKey);
 
             if (tenant == null || !PasswordHash.VerifyPassword(password, tenant.PasswordHash, tenant.PasswordSalt))
             {
@@ -272,6 +329,17 @@ namespace GdprServices.Auth
             };
 
             await _repository.CreateRefreshTokenAsync(refreshToken);
+
+            await LogAuditAsync(
+                    tenantId: tenant.Id,
+                    performedBy: email,
+                    actorType: ActorType.User,
+                    actionType: AuditActionType.Authentication,
+                    targetEntity: TargetEntityType.Tenant,
+                    targetEntityId: null,
+                    details: new Dictionary<string, object> { { "Action", $"User authenticated successfully from IP: {ipAddress}" } },
+                    isSuccess: false,
+                    logErrorContext: "tenant authentication");
 
             return new JwtAuthResponse
             {

@@ -50,8 +50,28 @@ namespace GdprApi.Controllers
         [HttpPost("Authenticate")]
         public async Task<IActionResult> AuthenticateTenantAsync([FromBody] AuthenticateTenantRequest request)
         {
-            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            return Ok(await _authService.AuthenticateTenantAsync(request.Email, request.Password, ipAddress));
+            // Get client IP from X-Forwarded-For header or RemoteIpAddress
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+            string ipAddress = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            }
+            else
+            {
+                ipAddress = ipAddress
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault()?
+                    .Trim() ?? "unknown";
+            }
+
+            var response = await _authService.AuthenticateTenantAsync(
+                request.Email,
+                request.Password,
+                ipAddress);
+
+            return Ok(response);
         }
 
         /// <summary>
