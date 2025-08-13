@@ -12,5 +12,6 @@ namespace Repositories.Interfaces
         Task<Tenant> GetByIdAsync(string tenantId);
         Task UpdateRefreshTokenAsync(string token, RefreshToken updateData);
         Task CreateRefreshTokenAsync(RefreshToken refreshToken);
+        Task<PseudonymMapping> GetPseudonymMappingByTenantIdAndFieldTypeAsync(string tenantId);
     }
 }
